@@ -5,20 +5,20 @@
  * the repo stays free of licensing questions. Output: public/music.wav, which
  * the npm script converts to public/music.mp3.
  *
- * Style: energetic sports-anthem / electronic build -> drop, 120 BPM, A minor.
- * 120 BPM keeps one bar at exactly 2s = 60 frames at 30fps, so the scene cuts
- * in src/timeline.ts land on musical bar lines.
+ * Style: broadcast sports sting -> full drive, 160 BPM, A minor.
+ * 160 BPM keeps one bar at exactly 1.5s = 45 frames at 30fps, so the scene cuts
+ * in src/timeline.ts land on musical bar lines. 10 bars = the 15s video.
  */
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const SR = 44100;
-const BPM = 120;
+const BPM = 160;
 const BEAT = 60 / BPM;
 const BAR = BEAT * 4;
-const BARS = 20;
-const DURATION = BARS * BAR + 1.2; // 20 bars + tail
+const BARS = 10;
+const DURATION = BARS * BAR + 1.2; // 10 bars + tail
 const N = Math.ceil(DURATION * SR);
 
 const left = new Float32Array(N);
@@ -226,72 +226,56 @@ for (let bar = 0; bar < BARS; bar++) {
   const t0 = bar * BAR;
   const {root, chord} = chordAtBar(bar);
 
-  const intro = bar < 2; // bars 0-1   : atmosphere
-  const groove = bar >= 2 && bar < 6; // bars 2-5   : beat enters
-  const build = bar >= 6 && bar < 8; // bars 6-7   : build-up
-  const drop = bar >= 8 && bar < 16; // bars 8-15  : full energy
-  const outro = bar >= 16; // bars 16-19 : landing
+  const sting = bar === 0; // opening hit
+  const build = bar === 1; // accelerating run-up
+  const drive = bar >= 2; // bars 2-9: full energy for the whole body
 
-  if (intro) {
-    stab(t0, BAR, chord.map((f) => f / 2), 0.55);
-    if (bar === 1) hat(t0 + BEAT * 2, true, 0.6);
-  }
-
-  if (groove || drop) {
-    const g = drop ? 1 : 0.85;
-    for (let b = 0; b < 4; b++) kick(t0 + b * BEAT, g);
-    clap(t0 + BEAT, g);
-    clap(t0 + BEAT * 3, g);
-    for (let e = 0; e < 8; e++) {
-      hat(t0 + e * (BEAT / 2), e % 4 === 3, e % 2 === 0 ? 0.9 * g : 0.6 * g);
-    }
-    // Off-beat bass pulse.
-    for (let e = 0; e < 8; e++) {
-      if (e % 2 === 1) bass(t0 + e * (BEAT / 2), BEAT / 2, root / 2, g);
-    }
-    bass(t0, BEAT / 2, root / 2, g * 1.05);
-  }
-
-  if (groove) {
-    stab(t0 + BEAT * 0.5, BEAT * 0.9, chord, 0.75);
-    stab(t0 + BEAT * 2.5, BEAT * 0.9, chord, 0.75);
+  if (sting) {
+    stab(t0, BAR, chord, 0.9);
+    bass(t0, BAR, root / 2, 0.9);
+    kick(t0, 1);
+    kick(t0 + BEAT * 2, 0.8);
+    hat(t0 + BEAT * 3, true, 0.7);
   }
 
   if (build) {
-    // Accelerating kick + snare-roll feel, filter opening into the drop.
-    const hits = bar === 6 ? 8 : 16;
-    for (let h = 0; h < hits; h++) {
-      const t = t0 + (h * BAR) / hits;
-      kick(t, 0.5 + (0.5 * h) / hits);
-      hat(t, false, 0.5 + (0.5 * h) / hits);
-      if (bar === 7) clap(t, 0.25 + (0.5 * h) / hits);
+    // Sixteenth-note run-up: kick and hat accelerate into the bar-2 drop.
+    for (let h = 0; h < 16; h++) {
+      const t = t0 + (h * BAR) / 16;
+      kick(t, 0.45 + (0.55 * h) / 16);
+      hat(t, false, 0.45 + (0.55 * h) / 16);
+      if (h >= 8) clap(t, 0.2 + (0.5 * h) / 16);
     }
-    stab(t0, BAR, chord, 0.7);
+    stab(t0, BAR, chord, 0.8);
   }
 
-  // Accents are placed on the frames where the video cuts scenes:
-  // bar 8 = line-ups, bar 14 = the SIYAH vs BEYAZ clash, bar 18 = outro.
-  if (bar === 6) riser(t0, BAR * 2, 1);
-  if (bar === 8) impact(t0, 1);
-  if (bar === 14) impact(t0, 0.95);
-  if (bar === 16) impact(t0, 0.9);
+  if (drive) {
+    for (let b = 0; b < 4; b++) kick(t0 + b * BEAT, 1);
+    clap(t0 + BEAT, 1);
+    clap(t0 + BEAT * 3, 1);
+    for (let e = 0; e < 8; e++) {
+      hat(t0 + e * (BEAT / 2), e % 4 === 3, e % 2 === 0 ? 0.9 : 0.6);
+    }
+    bass(t0, BEAT / 2, root / 2, 1.05);
+    for (let e = 1; e < 8; e += 2) bass(t0 + e * (BEAT / 2), BEAT / 2, root / 2, 1);
 
-  if (drop) {
-    brass(t0, BAR * 0.98, chord.map((f) => f * 2), 1);
+    brass(t0, BAR * 0.98, chord.map((f) => f * 2), bar >= 7 ? 1 : 0.9);
     stab(t0 + BEAT * 0.5, BEAT * 0.9, chord, 0.9);
     stab(t0 + BEAT * 2.5, BEAT * 0.9, chord, 0.9);
-    if (bar === 13 || bar === 15) riser(t0 + BEAT * 2, BEAT * 2, 0.7);
   }
 
-  if (outro) {
-    brass(t0, BAR * (bar === 19 ? 1.6 : 1), chord.map((f) => f * 2), 0.85);
-    bass(t0, BAR, root / 2, 0.8);
-    if (bar === 16) {
-      for (let b = 0; b < 4; b++) kick(t0 + b * BEAT, 0.85);
-      clap(t0 + BEAT, 0.85);
-      clap(t0 + BEAT * 3, 0.85);
-    }
-    if (bar >= 18) kick(t0, 0.9);
+  // Accents land on the frames where the video cuts (see src/timeline.ts):
+  // bar 2 = black line-up, bar 4 = white line-up, bar 6 = VS, bar 7 = outro.
+  if (bar === 0) impact(t0, 1);
+  if (bar === 1) riser(t0, BAR, 1);
+  if (bar === 2) impact(t0, 0.95);
+  if (bar === 4) impact(t0, 0.95);
+  if (bar === 5) riser(t0 + BEAT * 2, BEAT * 2, 0.8);
+  if (bar === 6) impact(t0, 1);
+  if (bar === 7) impact(t0, 0.9);
+  if (bar === 9) {
+    brass(t0, BAR * 1.5, chord.map((f) => f * 2), 1);
+    impact(t0, 0.85);
   }
 }
 

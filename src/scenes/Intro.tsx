@@ -1,84 +1,162 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Ball} from '../components/Ball';
+import {AccentRule, LiveTag, Ticker} from '../components/Broadcast';
 import {EASE_OUT, punchIn, reveal} from '../components/anim';
-import {COLORS, FONTS, shadow} from '../theme';
+import {COLORS, FONTS} from '../theme';
 
-/** Bars 0-1: floodlights snap on, the ball rolls in, the title lands. */
+/** Bars 0-1: the opening sting, cut to land on the bar-2 impact. */
 export const Intro: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
 
-  const ballIn = interpolate(frame, [6, 46], [0, 1], {
-    extrapolateLeft: 'clamp',
+  const ballIn = interpolate(frame, [0, 26], [0, 1], {
     extrapolateRight: 'clamp',
     easing: EASE_OUT,
   });
-  const ballY = interpolate(ballIn, [0, 1], [520, 0]);
-  const ballScale = interpolate(ballIn, [0, 1], [0.25, 1]);
-  const spin = interpolate(frame, [0, 120], [0, 430]);
+  const spin = interpolate(frame, [0, 90], [-140, 220]);
 
-  const kicker = punchIn(frame, fps, 40);
-  const title = punchIn(frame, fps, 50);
-  const rule = reveal(frame, 66, 20);
+  const kicker = punchIn(frame, fps, 14);
+  const title = punchIn(frame, fps, 20);
+  const rule = reveal(frame, 30, 14);
+  const sub = punchIn(frame, fps, 36);
+
+  // Two sweeping wipes, the way a broadcast opener brands the screen.
+  const wipe = (delay: number) =>
+    interpolate(frame, [delay, delay + 18], [0, 1], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: EASE_OUT,
+    });
 
   return (
-    <AbsoluteFill
-      style={{alignItems: 'center', justifyContent: 'center', gap: 0}}
-    >
-      <div
+    <AbsoluteFill>
+      <AbsoluteFill
         style={{
-          transform: `translateY(${ballY - 180}px) scale(${ballScale})`,
-          filter: `drop-shadow(0 40px 60px rgba(0,0,0,0.6))`,
-          opacity: ballIn,
-        }}
-      >
-        <Ball size={420} rotation={spin} />
-      </div>
-
-      <div
-        style={{
-          marginTop: -60,
-          opacity: kicker,
-          transform: `translateY(${(1 - kicker) * 40}px)`,
-          fontFamily: FONTS.body,
-          fontWeight: 700,
-          fontSize: 62,
-          letterSpacing: 18,
-          color: COLORS.lime,
-          textShadow: shadow(0.7),
-          marginBottom: 12,
-        }}
-      >
-        HALI SAHA
-      </div>
-
-      <div
-        style={{
-          opacity: title,
-          transform: `scale(${interpolate(title, [0, 1], [1.5, 1])})`,
-          fontFamily: FONTS.display,
-          fontSize: 230,
-          // Reserves the deep Ç cedilla, which otherwise crosses the rule.
-          lineHeight: 1.3,
-          color: '#fff',
-          letterSpacing: 4,
-          textShadow: `0 18px 50px rgba(0,0,0,0.75)`,
-        }}
-      >
-        MAÇ GÜNÜ
-      </div>
-
-      <div
-        style={{
-          // Clears Anton's unusually deep Ç cedilla in "MAÇ".
-          marginTop: 46,
-          width: 620 * rule,
-          height: 10,
-          borderRadius: 5,
-          background: `linear-gradient(90deg, ${COLORS.orange}, ${COLORS.lime})`,
+          background:
+            'linear-gradient(165deg, rgba(6,17,25,0.55) 0%, rgba(6,17,25,0.9) 60%, rgba(6,17,25,0.97) 100%)',
         }}
       />
+
+      {/* Angled colour flashes behind the type. */}
+      <AbsoluteFill style={{overflow: 'hidden'}}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 470,
+            left: -200,
+            width: 1600,
+            height: 26,
+            background: COLORS.orange,
+            transform: `rotate(-8deg) scaleX(${wipe(8)})`,
+            transformOrigin: 'left center',
+            opacity: 0.9,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            top: 1640,
+            left: -200,
+            width: 1600,
+            height: 14,
+            background: COLORS.lime,
+            transform: `rotate(-8deg) scaleX(${wipe(14)})`,
+            transformOrigin: 'left center',
+            opacity: 0.85,
+          }}
+        />
+      </AbsoluteFill>
+
+      <AbsoluteFill
+        style={{
+          padding: '74px 44px 64px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
+          <LiveTag progress={punchIn(frame, fps, 4)} label="MAÇ ÖNÜ" />
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0,
+          }}
+        >
+          <div
+            style={{
+              opacity: ballIn,
+              transform: `translateY(${(1 - ballIn) * 260}px) scale(${0.4 + 0.6 * ballIn})`,
+              filter: 'drop-shadow(0 34px 50px rgba(0,0,0,0.7))',
+              marginBottom: 46,
+            }}
+          >
+            <Ball size={330} rotation={spin} />
+          </div>
+
+          <div
+            style={{
+              opacity: kicker,
+              transform: `translateY(${(1 - kicker) * 30}px)`,
+              fontFamily: FONTS.body,
+              fontWeight: 700,
+              fontSize: 54,
+              letterSpacing: 20,
+              color: COLORS.lime,
+              lineHeight: 1,
+              marginBottom: 18,
+            }}
+          >
+            HALI SAHA
+          </div>
+
+          <div
+            style={{
+              opacity: title,
+              transform: `scale(${interpolate(title, [0, 1], [1.45, 1])})`,
+              fontFamily: FONTS.display,
+              fontSize: 208,
+              lineHeight: 1.3,
+              color: '#fff',
+              letterSpacing: 3,
+              textShadow: '0 16px 44px rgba(0,0,0,0.8)',
+            }}
+          >
+            MAÇ GÜNÜ
+          </div>
+
+          <div style={{marginTop: 64}}>
+            <AccentRule
+              progress={rule}
+              width={620}
+              colors={[COLORS.orange, COLORS.lime, COLORS.ice]}
+            />
+          </div>
+
+          <div
+            style={{
+              opacity: sub,
+              marginTop: 34,
+              fontFamily: FONTS.body,
+              fontWeight: 600,
+              fontSize: 46,
+              letterSpacing: 12,
+              color: 'rgba(255,255,255,0.78)',
+              lineHeight: 1,
+            }}
+          >
+            KADROLAR AÇIKLANDI
+          </div>
+        </div>
+
+        <Ticker progress={reveal(frame, 22, 14)} />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };

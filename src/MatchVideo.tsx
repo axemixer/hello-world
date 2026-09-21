@@ -2,8 +2,6 @@ import React from 'react';
 import {AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {Pitch} from './components/Pitch';
 import {Intro} from './scenes/Intro';
-import {MatchInfo} from './scenes/MatchInfo';
-import {Callout} from './scenes/Callout';
 import {Lineup} from './scenes/Lineup';
 import {Clash} from './scenes/Clash';
 import {Outro} from './scenes/Outro';
@@ -16,10 +14,10 @@ loadFonts();
 export const MatchVideo: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // The track is 40s and the video is 38s, so fade the tail rather than cut it.
+  // The track runs 1.2s past the last frame, so fade rather than hard-cut it.
   const volume = interpolate(
     frame,
-    [0, 8, DURATION_IN_FRAMES - 34, DURATION_IN_FRAMES],
+    [0, 5, DURATION_IN_FRAMES - 22, DURATION_IN_FRAMES],
     [0, 1, 1, 0],
     {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
   );
@@ -33,17 +31,11 @@ export const MatchVideo: React.FC = () => {
       <Sequence from={SCENES.intro.from} durationInFrames={SCENES.intro.duration}>
         <Intro />
       </Sequence>
-      <Sequence from={SCENES.info.from} durationInFrames={SCENES.info.duration}>
-        <MatchInfo />
-      </Sequence>
-      <Sequence from={SCENES.callout.from} durationInFrames={SCENES.callout.duration}>
-        <Callout />
-      </Sequence>
       <Sequence from={SCENES.teamA.from} durationInFrames={SCENES.teamA.duration}>
-        <Lineup team={TEAM_A} side="left" />
+        <Lineup team={TEAM_A} letter="A" />
       </Sequence>
       <Sequence from={SCENES.teamB.from} durationInFrames={SCENES.teamB.duration}>
-        <Lineup team={TEAM_B} side="right" />
+        <Lineup team={TEAM_B} letter="B" />
       </Sequence>
       <Sequence from={SCENES.clash.from} durationInFrames={SCENES.clash.duration}>
         <Clash />

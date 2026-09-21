@@ -5,22 +5,20 @@ import {Jersey} from '../components/Jersey';
 import {EASE_OUT, impactFlash, punchIn} from '../components/anim';
 import {COLORS, FONTS, shadow} from '../theme';
 
-/** Bars 14-15: the two halves slam together and VS lands between them. */
+/** Bar 6: the pre-match face-off card. One bar, so it hits and moves on. */
 export const Clash: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
 
-  const slam = interpolate(frame, [0, 22], [0, 1], {
+  const slam = interpolate(frame, [0, 14], [0, 1], {
     extrapolateRight: 'clamp',
     easing: EASE_OUT,
   });
-  const vs = punchIn(frame, fps, 18);
-  const vsPulse = 1 + 0.045 * Math.sin((frame - 18) / 5);
-  const shake = frame < 30 ? Math.sin(frame * 3.4) * (1 - slam) * 26 : 0;
+  const vs = punchIn(frame, fps, 8);
+  const shake = frame < 20 ? Math.sin(frame * 3.6) * (1 - slam) * 22 : 0;
 
   return (
     <AbsoluteFill style={{overflow: 'hidden'}}>
-      {/* Black half, sliding down from the top on a diagonal cut. */}
       <AbsoluteFill
         style={{
           background: `linear-gradient(160deg, ${TEAM_A.shirt}, #000)`,
@@ -28,7 +26,6 @@ export const Clash: React.FC = () => {
           transform: `translateY(${(1 - slam) * -1000}px)`,
         }}
       />
-      {/* White half, sliding up from the bottom. */}
       <AbsoluteFill
         style={{
           background: `linear-gradient(340deg, ${TEAM_B.shirt}, #b9bec7)`,
@@ -36,7 +33,6 @@ export const Clash: React.FC = () => {
           transform: `translateY(${(1 - slam) * 1000}px)`,
         }}
       />
-      {/* The seam between them. */}
       <AbsoluteFill
         style={{
           background: `linear-gradient(94deg, ${COLORS.orange}, ${COLORS.lime}, ${COLORS.ice})`,
@@ -49,50 +45,76 @@ export const Clash: React.FC = () => {
         <div
           style={{
             position: 'absolute',
-            top: 270,
+            top: 300,
             left: 0,
             right: 0,
             textAlign: 'center',
-            opacity: punchIn(frame, fps, 10),
+            opacity: punchIn(frame, fps, 4),
           }}
         >
-          <div style={{display: 'flex', justifyContent: 'center', marginBottom: 6}}>
+          <div style={{display: 'flex', justifyContent: 'center'}}>
             <Jersey team={TEAM_A} size={300} number="A" />
           </div>
           <div
             style={{
               fontFamily: FONTS.display,
-              fontSize: 118,
+              fontSize: 124,
               color: '#fff',
               letterSpacing: 4,
               textShadow: shadow(1),
+              lineHeight: 1.1,
             }}
           >
             SİYAH
+          </div>
+          <div
+            style={{
+              fontFamily: FONTS.body,
+              fontWeight: 600,
+              fontSize: 30,
+              letterSpacing: 10,
+              color: TEAM_A.accent,
+              lineHeight: 1,
+            }}
+          >
+            {TEAM_A.formation}
           </div>
         </div>
 
         <div
           style={{
             position: 'absolute',
-            bottom: 230,
+            bottom: 258,
             left: 0,
             right: 0,
             textAlign: 'center',
-            opacity: punchIn(frame, fps, 14),
+            opacity: punchIn(frame, fps, 7),
           }}
         >
           <div
             style={{
+              fontFamily: FONTS.body,
+              fontWeight: 600,
+              fontSize: 30,
+              letterSpacing: 10,
+              color: '#1b7f9c',
+              lineHeight: 1,
+            }}
+          >
+            {TEAM_B.formation}
+          </div>
+          <div
+            style={{
               fontFamily: FONTS.display,
-              fontSize: 118,
+              fontSize: 124,
               color: TEAM_B.ink,
               letterSpacing: 4,
+              lineHeight: 1.1,
             }}
           >
             BEYAZ
           </div>
-          <div style={{display: 'flex', justifyContent: 'center', marginTop: 6}}>
+          <div style={{display: 'flex', justifyContent: 'center'}}>
             <Jersey team={TEAM_B} size={300} number="B" />
           </div>
         </div>
@@ -102,9 +124,9 @@ export const Clash: React.FC = () => {
             position: 'absolute',
             top: '50%',
             left: '50%',
-            transform: `translate(-50%, -50%) scale(${vs * vsPulse}) rotate(-7deg)`,
+            transform: `translate(-50%, -50%) scale(${vs}) rotate(-7deg)`,
             fontFamily: FONTS.display,
-            fontSize: 300,
+            fontSize: 290,
             color: COLORS.orange,
             WebkitTextStroke: '10px #fff',
             textShadow: '0 24px 60px rgba(0,0,0,0.65)',
@@ -115,7 +137,7 @@ export const Clash: React.FC = () => {
         </div>
       </AbsoluteFill>
 
-      <AbsoluteFill style={{background: '#fff', opacity: impactFlash(frame, 10)}} />
+      <AbsoluteFill style={{background: '#fff', opacity: impactFlash(frame, 8)}} />
     </AbsoluteFill>
   );
 };

@@ -1,7 +1,7 @@
 # Halı Saha Maç Videosu
 
-Remotion ile hazırlanmış, halı saha maçı duyuru videosu.
-**38 saniye · 1080×1920 (dikey) · 30 fps · müzikli** — WhatsApp / Instagram Story için.
+Remotion ile hazırlanmış, TV yayını tarzında halı saha maçı duyuru videosu.
+**15 saniye · 1080×1920 (dikey) · 30 fps · müzikli** — WhatsApp / Instagram Story için.
 
 ## Maç
 
@@ -10,25 +10,29 @@ Remotion ile hazırlanmış, halı saha maçı duyuru videosu.
 | **Gün** | Perşembe |
 | **Saat** | 20:00 |
 | **Saha** | Baltalimanı |
-| **Format** | 6'ya 6 |
+| **Format** | 6 v 6 |
 
-**Siyah Takım (A):** Mert, Oğuz, Murat, Passucci, Kamil, Yusuf
-**Beyaz Takım (B):** Orkun, Aykut, Özkan, Mıstık, Ersan, Tuna
+Her iki takım da **1-2-2-1** diziliyor ve oyuncular taktik tahtasında
+mevkilerine yerleştiriliyor (kaleci, 2 defans, 2 orta saha, 1 forvet).
+
+**Siyah Takım (A):** Mert (KL), Oğuz (DEF), Murat (DEF), Passucci (ORT), Kamil (ORT), Yusuf (FOR)
+**Beyaz Takım (B):** Orkun (KL), Aykut (DEF), Özkan (DEF), Mustafa (ORT), Ersan (ORT), Tunahan (FOR)
 
 ## Sahneler
 
-Müzik 120 BPM olduğu için bir ölçü tam olarak 2 sn = 60 kare. Bütün kesmeler
+Müzik 160 BPM olduğu için bir ölçü tam olarak 1.5 sn = 45 kare. Bütün kesmeler
 ölçü başlarına, müziğin vuruşlarına denk geliyor (`src/timeline.ts`).
 
 | Kare | Süre | Sahne |
 |---|---|---|
-| 0 | 4 sn | Işıklar yanıyor, top geliyor — **MAÇ GÜNÜ** |
-| 120 | 8 sn | Gün / saha / saat kartları |
-| 360 | 4 sn | **KADROLAR AÇIKLANDI** (build-up) |
-| 480 | 6 sn | Siyah takım kadrosu |
-| 660 | 6 sn | Beyaz takım kadrosu |
-| 840 | 4 sn | **SİYAH vs BEYAZ** |
-| 960 | 6 sn | **HAZIR MISIN?** + özet kart |
+| 0 | 3 sn | Açılış jeneriği — **MAÇ GÜNÜ / KADROLAR AÇIKLANDI** |
+| 90 | 3 sn | Siyah takım taktik tahtası |
+| 180 | 3 sn | Beyaz takım taktik tahtası |
+| 270 | 1.5 sn | **SİYAH vs BEYAZ** |
+| 315 | 4.5 sn | **HAZIR MISIN?** + özet kart |
+
+Her sahnede yayın grafikleri sabit: sağ üstte **MAÇ ÖNÜ** etiketi, takım
+şeridi (alt bant), altta **PERŞEMBE · 20:00 · BALTALİMANI · 6 v 6** şeridi.
 
 ## Komutlar
 
@@ -50,15 +54,17 @@ npx remotion render MatchVideo out/hali-saha-mac.mp4 \
 
 ## Bilgileri değiştirmek
 
-Takım isimleri, oyuncular, renkler ve maç bilgisi tek dosyada: **`src/data.ts`**.
-Oyuncu sayısını değiştirirseniz kadro ızgarası kendini ayarlar.
+Takım isimleri, oyuncular, mevkiler, renkler ve maç bilgisi tek dosyada:
+**`src/data.ts`**. Diziliş `SHAPE` dizisindeki x/y koordinatlarıyla belirleniyor
+— oyuncu sırası bu koordinatlara göre eşleşir, yani sıralamayı değiştirmek
+mevkileri değiştirir.
 
 ## Müzik
 
 `public/music.mp3` sıfırdan sentezleniyor — hazır örnek (sample) kullanılmıyor,
 dolayısıyla telif sorunu yok. `scripts/make-music.mjs` davul, bas, akor ve riser
-seslerini tek tek üretip 120 BPM / La minör bir parçaya diziyor: giriş → groove →
-build-up → drop → final. `npm run music` ile yeniden üretilir.
+seslerini tek tek üretip 160 BPM / La minör bir parçaya diziyor: açılış vuruşu →
+hızlanan build-up → sonuna kadar yüksek tempo. `npm run music` ile yeniden üretilir.
 
 ## Yazı tipleri
 
@@ -70,13 +76,18 @@ dahil. Ayrıntı: `public/fonts/OFL.txt`.
 
 ```
 src/
-  Root.tsx            kompozisyon tanımı
-  MatchVideo.tsx      sahneleri ve müziği birleştirir
-  timeline.ts         kare/ölçü hesapları
-  data.ts             maç ve kadro bilgisi
-  theme.ts            renkler ve font yığınları
-  fonts.ts            yerel font yükleme
-  components/         Pitch, Ball, Jersey, animasyon yardımcıları
-  scenes/             Intro, MatchInfo, Callout, Lineup, Clash, Outro
-scripts/make-music.mjs  müzik sentezleyici
+  Root.tsx                 kompozisyon tanımı
+  MatchVideo.tsx           sahneleri ve müziği birleştirir
+  timeline.ts              kare/ölçü hesapları
+  data.ts                  maç bilgisi, kadrolar ve diziliş koordinatları
+  theme.ts                 renkler ve font yığınları
+  fonts.ts                 yerel font yükleme
+  components/
+    FormationBoard.tsx     perspektifli taktik tahtası
+    Broadcast.tsx          alt bant, şerit, MAÇ ÖNÜ etiketi
+    Pitch.tsx              arka plan sahası
+    Ball.tsx, Jersey.tsx   top ve forma çizimleri
+    anim.ts                animasyon yardımcıları
+  scenes/                  Intro, Lineup, Clash, Outro
+scripts/make-music.mjs     müzik sentezleyici
 ```
