@@ -12,11 +12,11 @@ Remotion ile hazırlanmış, TV yayını tarzında halı saha maçı duyuru vide
 | **Saha** | Baltalimanı |
 | **Format** | 6 v 6 |
 
-Her iki takım da **1-2-2-1** diziliyor ve oyuncular taktik tahtasında
-mevkilerine yerleştiriliyor (kaleci, 2 defans, 2 orta saha, 1 forvet).
+Kaleci oynanmıyor — kale önü taktik tahtasında boş bırakılıyor. Her iki takım
+da **2-2-2** diziliyor: 2 defans, 2 orta saha, 2 forvet.
 
-**Siyah Takım (A):** Mert (KL), Oğuz (DEF), Murat (DEF), Passucci (ORT), Kamil (ORT), Yusuf (FOR)
-**Beyaz Takım (B):** Orkun (KL), Aykut (DEF), Özkan (DEF), Mustafa (ORT), Ersan (ORT), Tunahan (FOR)
+**Siyah Takım (A):** Mert (DEF), Oğuz (DEF), Murat (ORT), Passucci (ORT), Kamil (FOR), Yusuf (FOR)
+**Beyaz Takım (B):** Orkun (DEF), Aykut (DEF), Özkan (ORT), Mustafa (ORT), Ersan (FOR), Tunahan (FOR)
 
 ## Sahneler
 

@@ -1,5 +1,5 @@
-/** Halı saha mevkileri: kaleci, defans, orta saha, forvet. */
-export type Position = 'KL' | 'DEF' | 'ORT' | 'FOR';
+/** Halı saha mevkileri. Kaleci oynanmıyor, kale önü boş kalıyor. */
+export type Position = 'DEF' | 'ORT' | 'FOR';
 
 export type Player = {
   name: string;
@@ -34,20 +34,22 @@ export const MATCH = {
 } as const;
 
 export const POSITION_LABEL: Record<Position, string> = {
-  KL: 'KALECİ',
   DEF: 'DEFANS',
   ORT: 'ORTA SAHA',
   FOR: 'FORVET',
 };
 
-/** 1-2-2-1: one keeper, two at the back, two in midfield, one up top. */
+/**
+ * 2-2-2: nobody keeps goal, so the six outfield players split evenly across
+ * the thirds and the area in front of the goal is deliberately left empty.
+ */
 const SHAPE: Pick<Player, 'position' | 'x' | 'y'>[] = [
-  {position: 'KL', x: 0.5, y: 0.9},
-  {position: 'DEF', x: 0.25, y: 0.69},
-  {position: 'DEF', x: 0.75, y: 0.69},
-  {position: 'ORT', x: 0.25, y: 0.45},
-  {position: 'ORT', x: 0.75, y: 0.45},
-  {position: 'FOR', x: 0.5, y: 0.2},
+  {position: 'DEF', x: 0.27, y: 0.79},
+  {position: 'DEF', x: 0.73, y: 0.79},
+  {position: 'ORT', x: 0.27, y: 0.52},
+  {position: 'ORT', x: 0.73, y: 0.52},
+  {position: 'FOR', x: 0.32, y: 0.25},
+  {position: 'FOR', x: 0.68, y: 0.25},
 ];
 
 const lineUp = (names: string[]): Player[] =>
@@ -56,7 +58,7 @@ const lineUp = (names: string[]): Player[] =>
 export const TEAM_A: Team = {
   name: 'SİYAH TAKIM',
   subtitle: 'TAKIM A',
-  formation: '1-2-2-1',
+  formation: '2-2-2',
   shirt: '#15161a',
   shirtShade: '#0a0b0e',
   ink: '#ffffff',
@@ -67,7 +69,7 @@ export const TEAM_A: Team = {
 export const TEAM_B: Team = {
   name: 'BEYAZ TAKIM',
   subtitle: 'TAKIM B',
-  formation: '1-2-2-1',
+  formation: '2-2-2',
   shirt: '#f5f6f8',
   shirtShade: '#cfd3da',
   ink: '#15161a',
