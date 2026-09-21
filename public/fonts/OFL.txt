@@ -1,0 +1,10 @@
+The font files in this directory are subsets of:
+
+  Anton            — Copyright (c) Vernon Adams, Cyreal
+  Barlow Condensed — Copyright (c) Jeremy Tribby
+
+Both are licensed under the SIL Open Font License, Version 1.1:
+https://openfontlicense.org
+
+They are vendored here so `npm run build` renders without network access.
+Full license text: https://openfontlicense.org/open-font-license-official-text/
