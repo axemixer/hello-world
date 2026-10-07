@@ -1,48 +1,75 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Sequence, interpolate, staticFile, useCurrentFrame} from 'remotion';
-import {Pitch} from './components/Pitch';
-import {Intro} from './scenes/Intro';
+import {
+  AbsoluteFill,
+  Audio,
+  Sequence,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+} from 'remotion';
+import {Starfield} from './components/Starfield';
+import {dissolve} from './components/anim';
+import {Opening} from './scenes/Opening';
 import {Lineup} from './scenes/Lineup';
-import {Clash} from './scenes/Clash';
-import {Outro} from './scenes/Outro';
+import {Showdown} from './scenes/Showdown';
+import {Fixture} from './scenes/Fixture';
 import {TEAM_A, TEAM_B} from './data';
 import {DURATION_IN_FRAMES, SCENES} from './timeline';
 import {loadFonts} from './fonts';
 
 loadFonts();
 
+/** Wraps a scene so it dissolves over the shared star field instead of cutting. */
+const Scene: React.FC<{
+  from: number;
+  duration: number;
+  children: React.ReactNode;
+}> = ({from, duration, children}) => (
+  <Sequence from={from} durationInFrames={duration}>
+    <Fade duration={duration}>{children}</Fade>
+  </Sequence>
+);
+
+const Fade: React.FC<{duration: number; children: React.ReactNode}> = ({
+  duration,
+  children,
+}) => {
+  const frame = useCurrentFrame();
+  return <AbsoluteFill style={{opacity: dissolve(frame, duration)}}>{children}</AbsoluteFill>;
+};
+
 export const MatchVideo: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // The track runs 1.2s past the last frame, so fade rather than hard-cut it.
+  // The anthem rings out 1.6s past the last frame, so fade rather than cut it.
   const volume = interpolate(
     frame,
-    [0, 5, DURATION_IN_FRAMES - 22, DURATION_IN_FRAMES],
+    [0, 6, DURATION_IN_FRAMES - 26, DURATION_IN_FRAMES],
     [0, 1, 1, 0],
     {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'},
   );
 
   return (
-    <AbsoluteFill style={{backgroundColor: '#061119'}}>
+    <AbsoluteFill style={{backgroundColor: '#01040c'}}>
       <Audio src={staticFile('music.mp3')} volume={volume} />
 
-      <Pitch />
+      <Starfield />
 
-      <Sequence from={SCENES.intro.from} durationInFrames={SCENES.intro.duration}>
-        <Intro />
-      </Sequence>
-      <Sequence from={SCENES.teamA.from} durationInFrames={SCENES.teamA.duration}>
+      <Scene {...SCENES.opening}>
+        <Opening />
+      </Scene>
+      <Scene {...SCENES.teamA}>
         <Lineup team={TEAM_A} letter="A" />
-      </Sequence>
-      <Sequence from={SCENES.teamB.from} durationInFrames={SCENES.teamB.duration}>
+      </Scene>
+      <Scene {...SCENES.teamB}>
         <Lineup team={TEAM_B} letter="B" />
-      </Sequence>
-      <Sequence from={SCENES.clash.from} durationInFrames={SCENES.clash.duration}>
-        <Clash />
-      </Sequence>
-      <Sequence from={SCENES.outro.from} durationInFrames={SCENES.outro.duration}>
-        <Outro />
-      </Sequence>
+      </Scene>
+      <Scene {...SCENES.showdown}>
+        <Showdown />
+      </Scene>
+      <Scene {...SCENES.fixture}>
+        <Fixture />
+      </Scene>
     </AbsoluteFill>
   );
 };

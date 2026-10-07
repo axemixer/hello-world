@@ -1,7 +1,7 @@
 import React from 'react';
 import type {Player, Team} from '../data';
 import {POSITION_LABEL} from '../data';
-import {FONTS} from '../theme';
+import {COLORS, FONTS} from '../theme';
 
 const BOARD_W = 940;
 const BOARD_H = 1400;
@@ -22,18 +22,24 @@ const PitchSurface: React.FC<{team: Team}> = ({team}) => {
       style={{position: 'absolute', inset: 0}}
     >
       <defs>
-        <linearGradient id={`${id}-turf`} x1="0" y1="0" x2="0.2" y2="1">
-          <stop offset="0%" stopColor="#1a6f3c" />
-          <stop offset="55%" stopColor="#146030" />
-          <stop offset="100%" stopColor="#0d4423" />
+        {/* A night-match pitch: cool, deep green with the floodlight falling
+            on the far half. */}
+        <linearGradient id={`${id}-turf`} x1="0" y1="0" x2="0.18" y2="1">
+          <stop offset="0%" stopColor="#1a7340" />
+          <stop offset="48%" stopColor={COLORS.turfLit} />
+          <stop offset="100%" stopColor="#0a3a20" />
         </linearGradient>
+        <radialGradient id={`${id}-flood`} cx="50%" cy="8%" r="62%">
+          <stop offset="0%" stopColor="rgba(190,230,255,0.26)" />
+          <stop offset="100%" stopColor="rgba(190,230,255,0)" />
+        </radialGradient>
         <linearGradient id={`${id}-tint`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={team.accent} stopOpacity="0.16" />
+          <stop offset="0%" stopColor={team.accent} stopOpacity="0.2" />
           <stop offset="100%" stopColor={team.accent} stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      <rect width={BOARD_W} height={BOARD_H} rx="8" fill={`url(#${id}-turf)`} />
+      <rect width={BOARD_W} height={BOARD_H} fill={`url(#${id}-turf)`} />
 
       {Array.from({length: 12}, (_, i) => (
         <rect
@@ -43,19 +49,20 @@ const PitchSurface: React.FC<{team: Team}> = ({team}) => {
           width={BOARD_W}
           height={BOARD_H / 12}
           fill="#ffffff"
-          opacity={i % 2 === 0 ? 0.045 : 0.012}
+          opacity={i % 2 === 0 ? 0.05 : 0.014}
         />
       ))}
 
-      {/* Attacking half is tinted in the team colour, so the board reads
-          top-to-bottom as "this is the direction they play". */}
+      <rect width={BOARD_W} height={BOARD_H} fill={`url(#${id}-flood)`} />
+      {/* Attacking half carries the team colour, so the board reads
+          bottom-to-top as "this is the way they play". */}
       <rect width={BOARD_W} height={BOARD_H * 0.5} fill={`url(#${id}-tint)`} />
 
-      <g fill="none" stroke="rgba(255,255,255,0.78)" strokeWidth={5}>
+      <g fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth={5}>
         <rect x="26" y="26" width={BOARD_W - 52} height={BOARD_H - 52} />
         <line x1="26" y1={BOARD_H / 2} x2={BOARD_W - 26} y2={BOARD_H / 2} />
         <circle cx={BOARD_W / 2} cy={BOARD_H / 2} r="150" />
-        <circle cx={BOARD_W / 2} cy={BOARD_H / 2} r="9" fill="rgba(255,255,255,0.78)" />
+        <circle cx={BOARD_W / 2} cy={BOARD_H / 2} r="9" fill="rgba(255,255,255,0.8)" />
         {/* Own penalty area (bottom) and the one they attack (top). */}
         <rect x="240" y={BOARD_H - 250} width="460" height="224" />
         <rect x="350" y={BOARD_H - 112} width="240" height="86" />
@@ -68,6 +75,18 @@ const PitchSurface: React.FC<{team: Team}> = ({team}) => {
           d={`M${BOARD_W - 26} ${BOARD_H - 86} A60 60 0 0 0 ${BOARD_W - 86} ${BOARD_H - 26}`}
         />
       </g>
+
+      {/* Silver trim around the board, the way the graphic is framed on air. */}
+      <rect
+        x="3"
+        y="3"
+        width={BOARD_W - 6}
+        height={BOARD_H - 6}
+        fill="none"
+        stroke={COLORS.silverDim}
+        strokeWidth={6}
+        opacity={0.75}
+      />
     </svg>
   );
 };
@@ -80,24 +99,24 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
         position: 'absolute',
         left: player.x * BOARD_W,
         top: player.y * BOARD_H,
-        width: 150,
-        height: 150,
-        marginLeft: -75,
-        marginTop: -75,
+        width: 170,
+        height: 170,
+        marginLeft: -85,
+        marginTop: -85,
         borderRadius: '50%',
-        background: `radial-gradient(circle, ${team.accent}55 0%, ${team.accent}18 48%, transparent 70%)`,
+        background: `radial-gradient(circle, rgba(170,215,255,0.5) 0%, rgba(120,180,255,0.16) 46%, transparent 70%)`,
         opacity: p,
       }}
     />
 
-    {/* Badge + name plate, standing upright out of the board. */}
+    {/* Number chip + name plate, standing upright out of the board. */}
     <div
       style={{
         position: 'absolute',
         left: player.x * BOARD_W,
         top: player.y * BOARD_H,
         transformOrigin: 'center bottom',
-        transform: `translate(-50%, -100%) rotateX(${-TILT}deg) scale(${0.82 + 0.18 * p})`,
+        transform: `translate(-50%, -100%) rotateX(${-TILT}deg) scale(${0.8 + 0.2 * p})`,
         transformStyle: 'preserve-3d',
         display: 'flex',
         flexDirection: 'column',
@@ -107,12 +126,12 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
     >
       <div
         style={{
-          width: 96,
-          height: 96,
-          borderRadius: '50%',
-          background: team.shirt,
-          border: `5px solid ${team.accent}`,
-          boxShadow: '0 14px 30px rgba(0,0,0,0.6)',
+          width: 86,
+          height: 86,
+          borderRadius: 10,
+          background: `linear-gradient(165deg, ${COLORS.navyMid}, ${COLORS.navyDeep})`,
+          border: `3px solid ${COLORS.silverDim}`,
+          boxShadow: `0 14px 30px rgba(0,0,0,0.65), 0 0 22px ${COLORS.blueGlow}`,
           display: 'grid',
           placeItems: 'center',
         }}
@@ -120,8 +139,8 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
         <span
           style={{
             fontFamily: FONTS.display,
-            fontSize: 54,
-            color: team.ink,
+            fontSize: 50,
+            color: COLORS.silver,
             lineHeight: 1,
           }}
         >
@@ -131,16 +150,16 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
 
       <div
         style={{
-          marginTop: -10,
-          padding: '10px 20px 12px',
-          borderRadius: 8,
-          background: 'rgba(7,14,22,0.94)',
-          borderBottom: `5px solid ${team.accent}`,
-          boxShadow: '0 12px 28px rgba(0,0,0,0.55)',
+          marginTop: -8,
+          padding: '10px 22px 11px',
+          background: `linear-gradient(170deg, rgba(10,26,66,0.97), rgba(3,9,26,0.95))`,
+          borderTop: `2px solid ${COLORS.silverDim}`,
+          borderBottom: `4px solid ${team.accent}`,
+          boxShadow: '0 12px 28px rgba(0,0,0,0.6)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 2,
+          gap: 3,
           whiteSpace: 'nowrap',
         }}
       >
@@ -149,8 +168,8 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
             fontFamily: FONTS.body,
             fontWeight: 700,
             fontSize: player.name.length > 7 ? 42 : 50,
-            letterSpacing: 2,
-            color: '#fff',
+            letterSpacing: 3,
+            color: COLORS.silver,
             lineHeight: 1,
           }}
         >
@@ -160,9 +179,9 @@ const Marker: React.FC<{team: Team; player: Player; p: number}> = ({team, player
           style={{
             fontFamily: FONTS.body,
             fontWeight: 600,
-            fontSize: 22,
-            letterSpacing: 5,
-            color: team.accent,
+            fontSize: 21,
+            letterSpacing: 6,
+            color: COLORS.blue,
             lineHeight: 1,
           }}
         >
@@ -202,7 +221,7 @@ export const FormationBoard: React.FC<{
         // than the element's box; lift it back into the middle of the frame.
         transform: `translateY(-235px) rotateX(${TILT}deg) scale(${0.94 + 0.06 * boardProgress})`,
         opacity: boardProgress,
-        filter: 'drop-shadow(0 40px 60px rgba(0,0,0,0.55))',
+        filter: 'drop-shadow(0 40px 70px rgba(0,0,0,0.75))',
       }}
     >
       <PitchSurface team={team} />

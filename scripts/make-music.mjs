@@ -1,29 +1,30 @@
 /**
  * Generates the background track for the match-announcement video.
  *
- * Everything is synthesized from scratch (no samples, no third-party audio) so
- * the repo stays free of licensing questions. Output: public/music.wav, which
- * the npm script converts to public/music.mp3.
+ * Everything is synthesized from scratch — no samples, no third-party audio and
+ * no existing melody — so the repo stays free of licensing questions. The style
+ * is an original orchestral/choral anthem in the European-cup-night mould:
+ * timpani, string swells, a choir pad and a brass fanfare.
  *
- * Style: broadcast sports sting -> full drive, 160 BPM, A minor.
- * 160 BPM keeps one bar at exactly 1.5s = 45 frames at 30fps, so the scene cuts
- * in src/timeline.ts land on musical bar lines. 10 bars = the 15s video.
+ * 80 BPM keeps one bar at exactly 3s = 90 frames at 30fps, so the scene cuts in
+ * src/timeline.ts land on musical bar lines. 5 bars = the 15s video.
  */
 import {mkdirSync, writeFileSync} from 'node:fs';
 import {dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const SR = 44100;
-const BPM = 160;
+const BPM = 80;
 const BEAT = 60 / BPM;
 const BAR = BEAT * 4;
-const BARS = 10;
-const DURATION = BARS * BAR + 1.2; // 10 bars + tail
+const BARS = 5;
+const DURATION = BARS * BAR + 1.6; // 5 bars + ring-out
 const N = Math.ceil(DURATION * SR);
 
 const left = new Float32Array(N);
 const right = new Float32Array(N);
 
+const TAU = Math.PI * 2;
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
 /** Adds a mono voice to the stereo buss with a constant-power pan. */
@@ -35,111 +36,106 @@ const add = (index, value, pan = 0) => {
   right[index] += value * r;
 };
 
-// A minor progression: i - VI - III - VII, one bar each.
-const PROGRESSION = [
-  {root: 220.0, chord: [220.0, 261.63, 329.63]}, // Am
-  {root: 174.61, chord: [174.61, 220.0, 261.63]}, // F
-  {root: 261.63, chord: [261.63, 329.63, 392.0]}, // C
-  {root: 196.0, chord: [196.0, 246.94, 293.66]}, // G
-];
+/* ------------------------------------------------------------- harmony */
 
-const chordAtBar = (bar) => PROGRESSION[bar % PROGRESSION.length];
+// D major — the bright, regal end of the keyboard: I - IV - V - vi - I.
+const PROGRESSION = [
+  {root: 146.83, chord: [146.83, 185.0, 220.0, 293.66]}, // D
+  {root: 196.0, chord: [196.0, 246.94, 293.66, 392.0]}, // G
+  {root: 220.0, chord: [220.0, 277.18, 329.63, 440.0]}, // A
+  {root: 246.94, chord: [246.94, 293.66, 369.99, 493.88]}, // Bm
+  {root: 146.83, chord: [146.83, 185.0, 220.0, 293.66]}, // D
+];
 
 /* ---------------------------------------------------------------- voices */
 
-const kick = (time, gain = 1) => {
-  const len = 0.42;
-  const start = Math.floor(time * SR);
-  let phase = 0;
-  for (let i = 0; i < len * SR; i++) {
-    const t = i / SR;
-    const env = Math.exp(-t * 9);
-    const pitch = 45 + 130 * Math.exp(-t * 38); // punchy pitch drop
-    phase += (2 * Math.PI * pitch) / SR;
-    const click = Math.exp(-t * 320) * (Math.random() * 2 - 1) * 0.35;
-    add(start + i, (Math.sin(phase) * env + click * env) * 0.95 * gain);
-  }
-};
-
-const clap = (time, gain = 1) => {
-  const len = 0.3;
-  const start = Math.floor(time * SR);
-  let bp = 0;
-  let lp = 0;
-  for (let i = 0; i < len * SR; i++) {
-    const t = i / SR;
-    // Three quick bursts then a short tail: the classic clap shape.
-    const burst =
-      Math.exp(-((t - 0.0) ** 2) / 2e-5) +
-      Math.exp(-((t - 0.011) ** 2) / 2e-5) +
-      Math.exp(-((t - 0.022) ** 2) / 2e-5);
-    const env = Math.min(1, burst) + Math.exp(-t * 16) * 0.55;
-    const noise = Math.random() * 2 - 1;
-    lp += (noise - lp) * 0.45;
-    bp = lp - bp * 0.02;
-    add(start + i, bp * env * 0.34 * gain, (Math.random() - 0.5) * 0.5);
-  }
-};
-
-const hat = (time, open = false, gain = 1) => {
-  const len = open ? 0.18 : 0.05;
-  const start = Math.floor(time * SR);
-  let prev = 0;
-  for (let i = 0; i < len * SR; i++) {
-    const t = i / SR;
-    const noise = Math.random() * 2 - 1;
-    const hp = noise - prev; // crude high-pass
-    prev = noise;
-    const env = Math.exp(-t * (open ? 18 : 95));
-    add(start + i, hp * env * 0.13 * gain, 0.28);
-  }
-};
-
-const bass = (time, len, freq, gain = 1) => {
+/** Orchestral timpani: pitched thump with a long body and a mallet click. */
+const timpani = (time, freq, gain = 1) => {
+  const len = 1.8;
   const start = Math.floor(time * SR);
   let phase = 0;
   let lp = 0;
-  let lp2 = 0;
-  const total = len * SR;
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < len * SR; i++) {
     const t = i / SR;
-    const env = clamp01(t / 0.006) * Math.exp(-t * 2.2) * clamp01((len - t) / 0.05);
-    phase += (2 * Math.PI * freq) / SR;
-    if (phase > 2 * Math.PI) phase -= 2 * Math.PI;
-    const saw = phase / Math.PI - 1;
-    const sub = Math.sin(phase);
-    const raw = saw * 0.5 + sub * 0.7;
-    // Two-pole lowpass with a slight opening sweep.
-    const cutoff = 0.1 + 0.16 * Math.exp(-t * 6);
-    lp += (raw - lp) * cutoff;
-    lp2 += (lp - lp2) * cutoff;
-    add(start + i, lp2 * env * 0.5 * gain);
+    const env = Math.exp(-t * 3.2) * clamp01(t / 0.004);
+    const pitch = freq * (1 + 0.5 * Math.exp(-t * 26));
+    phase += (TAU * pitch) / SR;
+    const noise = Math.random() * 2 - 1;
+    lp += (noise - lp) * 0.12;
+    const skin = lp * Math.exp(-t * 26) * 0.5;
+    add(start + i, (Math.sin(phase) * 0.95 + skin) * env * gain);
   }
 };
 
-const stab = (time, len, freqs, gain = 1, detune = 0.006) => {
+/** String ensemble: detuned saws, slow bow attack, gentle vibrato, spread wide. */
+const strings = (time, len, freqs, gain = 1, attack = 0.5) => {
   const start = Math.floor(time * SR);
   const total = len * SR;
-  const phases = [];
-  freqs.forEach(() => phases.push([0, 0, 0]));
+  const phases = freqs.map(() => [0, 0, 0, 0]);
+  let lpL = 0;
+  let lpR = 0;
   for (let i = 0; i < total; i++) {
     const t = i / SR;
-    const env = clamp01(t / 0.01) * Math.exp(-t * 3.4) * clamp01((len - t) / 0.04);
-    let v = 0;
+    const env =
+      clamp01(t / attack) * clamp01((len - t) / 0.45) * (0.92 + 0.08 * Math.sin(t * 4.2));
+    let vl = 0;
+    let vr = 0;
     for (let c = 0; c < freqs.length; c++) {
-      for (let d = 0; d < 3; d++) {
-        const f = freqs[c] * (1 + (d - 1) * detune);
-        phases[c][d] += (2 * Math.PI * f) / SR;
-        if (phases[c][d] > 2 * Math.PI) phases[c][d] -= 2 * Math.PI;
-        v += (phases[c][d] / Math.PI - 1) * 0.33; // detuned saw stack
+      // Four players per desk, each slightly out of tune and out of phase.
+      for (let d = 0; d < 4; d++) {
+        const detune = 1 + (d - 1.5) * 0.0032;
+        const vib = 1 + 0.0022 * Math.sin(TAU * 5.2 * t + c * 1.7 + d);
+        phases[c][d] += (TAU * freqs[c] * detune * vib) / SR;
+        if (phases[c][d] > TAU) phases[c][d] -= TAU;
+        const saw = phases[c][d] / Math.PI - 1;
+        if (d % 2 === 0) vl += saw;
+        else vr += saw;
       }
     }
-    add(start + i, (v / freqs.length) * env * 0.16 * gain, Math.sin(t * 3) * 0.25);
+    const k = 0.26;
+    lpL += (vl / (freqs.length * 2) - lpL) * k;
+    lpR += (vr / (freqs.length * 2) - lpR) * k;
+    add(start + i, lpL * env * 0.3 * gain, -0.5);
+    add(start + i, lpR * env * 0.3 * gain, 0.5);
   }
 };
 
+/**
+ * Choir pad: stacked sines weighted like vowel formants, with a slow swell and
+ * a breath of noise. This is what makes the track feel like a full stadium.
+ */
+const choir = (time, len, freqs, gain = 1) => {
+  const start = Math.floor(time * SR);
+  const total = len * SR;
+  const WEIGHTS = [1, 0.5, 0.34, 0.2, 0.13, 0.08];
+  const phases = freqs.map(() => WEIGHTS.map(() => Math.random() * TAU));
+  let breath = 0;
+  for (let i = 0; i < total; i++) {
+    const t = i / SR;
+    const env =
+      clamp01(t / 0.7) * clamp01((len - t) / 0.6) * (0.88 + 0.12 * Math.sin(t * 2.6));
+    let v = 0;
+    for (let c = 0; c < freqs.length; c++) {
+      // Two voices per part, a few cents apart, so the pad never sounds static.
+      for (let s = 0; s < 2; s++) {
+        const f0 = freqs[c] * (s === 0 ? 1 : 1.0035);
+        const vib = 1 + 0.004 * Math.sin(TAU * 4.6 * t + c * 2.1 + s);
+        for (let h = 0; h < WEIGHTS.length; h++) {
+          phases[c][h] += (TAU * f0 * (h + 1) * vib) / SR;
+          if (phases[c][h] > TAU) phases[c][h] -= TAU;
+          v += Math.sin(phases[c][h]) * WEIGHTS[h];
+        }
+      }
+    }
+    const noise = Math.random() * 2 - 1;
+    breath += (noise - breath) * 0.05;
+    v = v / (freqs.length * 4.4) + breath * 0.08;
+    add(start + i, v * env * 0.34 * gain, Math.sin(t * 0.7) * 0.3);
+  }
+};
+
+/** Brass fanfare: saturated saws with a hard front edge and an opening filter. */
 const brass = (time, len, freqs, gain = 1) => {
-  // Wide, slightly gritty lead for the drop — the "anthem" layer.
   const start = Math.floor(time * SR);
   const total = len * SR;
   const phases = freqs.map(() => [0, 0]);
@@ -147,149 +143,147 @@ const brass = (time, len, freqs, gain = 1) => {
   for (let i = 0; i < total; i++) {
     const t = i / SR;
     const env =
-      clamp01(t / 0.05) * (0.75 + 0.25 * Math.sin(t * 9)) * clamp01((len - t) / 0.18);
+      clamp01(t / 0.035) * (0.82 + 0.18 * Math.sin(t * 7)) * clamp01((len - t) / 0.2);
     let v = 0;
     for (let c = 0; c < freqs.length; c++) {
       for (let d = 0; d < 2; d++) {
-        const f = freqs[c] * (d === 0 ? 1 : 1.004);
-        phases[c][d] += (2 * Math.PI * f) / SR;
-        if (phases[c][d] > 2 * Math.PI) phases[c][d] -= 2 * Math.PI;
+        const f = freqs[c] * (d === 0 ? 1 : 1.005);
+        phases[c][d] += (TAU * f) / SR;
+        if (phases[c][d] > TAU) phases[c][d] -= TAU;
         const saw = phases[c][d] / Math.PI - 1;
-        v += Math.tanh(saw * 1.6) * 0.5;
+        v += Math.tanh(saw * 2.1) * 0.5;
       }
     }
     v /= freqs.length;
-    lp += (v - lp) * 0.3;
-    add(start + i, lp * env * 0.13 * gain, 0);
+    const cutoff = 0.2 + 0.3 * clamp01(t / 0.25);
+    lp += (v - lp) * cutoff;
+    add(start + i, lp * env * 0.17 * gain, 0);
   }
 };
 
-const riser = (time, len, gain = 1) => {
+/** Harp-like pluck for the sparkle over the top. */
+const pluck = (time, freq, gain = 1) => {
+  const len = 1.4;
   const start = Math.floor(time * SR);
-  const total = len * SR;
-  let bp = 0;
-  let lp = 0;
-  let phase = 0;
-  for (let i = 0; i < total; i++) {
-    const t = i / SR;
-    const p = t / len;
-    const env = p * p;
-    const noise = Math.random() * 2 - 1;
-    const cutoff = 0.02 + 0.55 * p * p;
-    lp += (noise - lp) * cutoff;
-    bp = lp - bp * 0.3;
-    // Tonal sweep riding on top of the noise sweep.
-    phase += (2 * Math.PI * (220 + 900 * p * p)) / SR;
-    add(start + i, (bp * 0.5 + Math.sin(phase) * 0.12) * env * 0.35 * gain, 0);
-  }
-};
-
-const impact = (time, gain = 1) => {
-  const start = Math.floor(time * SR);
-  const len = 2.2;
-  let lp = 0;
   let phase = 0;
   for (let i = 0; i < len * SR; i++) {
     const t = i / SR;
-    const env = Math.exp(-t * 2.6);
-    const noise = Math.random() * 2 - 1;
-    lp += (noise - lp) * 0.08;
-    phase += (2 * Math.PI * (60 + 40 * Math.exp(-t * 6))) / SR;
-    add(start + i, (lp * 1.6 + Math.sin(phase) * 0.8) * env * 0.4 * gain, 0);
+    const env = Math.exp(-t * 4.5) * clamp01(t / 0.003);
+    phase += (TAU * freq) / SR;
+    const v = Math.sin(phase) + Math.sin(phase * 2) * 0.22 + Math.sin(phase * 3) * 0.08;
+    add(start + i, v * env * 0.1 * gain, Math.sin(freq / 180) * 0.6);
   }
 };
 
-const crowd = (from, to, gain = 1) => {
-  // Soft stadium-ambience bed: band-limited noise with a slow swell.
-  const start = Math.floor(from * SR);
-  const total = Math.floor((to - from) * SR);
-  let lp = 0;
-  let lp2 = 0;
-  let hp = 0;
+/** Cymbal swell rising into a downbeat. */
+const swell = (time, len, gain = 1) => {
+  const start = Math.floor(time * SR);
+  const total = len * SR;
+  let prev = 0;
+  let bp = 0;
   for (let i = 0; i < total; i++) {
     const t = i / SR;
+    const p = t / len;
     const noise = Math.random() * 2 - 1;
-    lp += (noise - lp) * 0.06;
-    lp2 += (lp - lp2) * 0.06;
-    hp = lp2 - hp * 0.0008;
-    const swell = 0.6 + 0.4 * Math.sin(t * 0.8);
-    const fade = clamp01(t / 1.5) * clamp01((to - from - t) / 1.5);
-    add(start + i, hp * swell * fade * 0.5 * gain, (Math.random() - 0.5) * 0.6);
+    const hp = noise - prev;
+    prev = noise;
+    bp += (hp - bp) * 0.55;
+    add(start + i, bp * p * p * 0.3 * gain, Math.sin(t * 2) * 0.5);
+  }
+};
+
+/** Crash: the same texture, decaying, for the big downbeats. */
+const crash = (time, gain = 1) => {
+  const len = 2.6;
+  const start = Math.floor(time * SR);
+  let prev = 0;
+  let bp = 0;
+  for (let i = 0; i < len * SR; i++) {
+    const t = i / SR;
+    const noise = Math.random() * 2 - 1;
+    const hp = noise - prev;
+    prev = noise;
+    bp += (hp - bp) * 0.5;
+    add(start + i, bp * Math.exp(-t * 2.1) * 0.26 * gain, (Math.random() - 0.5) * 0.8);
+  }
+};
+
+/** Deep sub under each impact — felt more than heard. */
+const sub = (time, gain = 1) => {
+  const len = 2.0;
+  const start = Math.floor(time * SR);
+  let phase = 0;
+  for (let i = 0; i < len * SR; i++) {
+    const t = i / SR;
+    const env = Math.exp(-t * 2.4) * clamp01(t / 0.01);
+    phase += (TAU * (46 + 16 * Math.exp(-t * 7))) / SR;
+    add(start + i, Math.sin(phase) * env * 0.5 * gain);
   }
 };
 
 /* -------------------------------------------------------------- arrangement */
 
-crowd(0, BARS * BAR, 0.9);
-
 for (let bar = 0; bar < BARS; bar++) {
   const t0 = bar * BAR;
-  const {root, chord} = chordAtBar(bar);
+  const {root, chord} = PROGRESSION[bar];
+  const high = chord.map((f) => f * 2);
 
-  const sting = bar === 0; // opening hit
-  const build = bar === 1; // accelerating run-up
-  const drive = bar >= 2; // bars 2-9: full energy for the whole body
+  // Every bar is a scene in the video, so every bar opens on an accent.
+  crash(t0, bar === 0 || bar === 4 ? 1 : 0.7);
+  timpani(t0, root / 2, bar === 4 ? 1 : 0.9);
+  sub(t0, bar === 0 || bar === 3 || bar === 4 ? 1 : 0.7);
 
-  if (sting) {
-    stab(t0, BAR, chord, 0.9);
-    bass(t0, BAR, root / 2, 0.9);
-    kick(t0, 1);
-    kick(t0 + BEAT * 2, 0.8);
-    hat(t0 + BEAT * 3, true, 0.7);
-  }
+  strings(t0, BAR, chord, 1, bar === 0 ? 0.8 : 0.35);
+  choir(t0, BAR, high, bar === 0 ? 0.75 : 1);
 
-  if (build) {
-    // Sixteenth-note run-up: kick and hat accelerate into the bar-2 drop.
-    for (let h = 0; h < 16; h++) {
-      const t = t0 + (h * BAR) / 16;
-      kick(t, 0.45 + (0.55 * h) / 16);
-      hat(t, false, 0.45 + (0.55 * h) / 16);
-      if (h >= 8) clap(t, 0.2 + (0.5 * h) / 16);
+  if (bar === 0) {
+    // Opening: the crest forms, so the fanfare answers the first timpani hit.
+    brass(t0 + BEAT * 2, BEAT * 2, [chord[1], chord[2], chord[3]], 1);
+    for (let i = 0; i < 4; i++) {
+      pluck(t0 + BEAT * 2 + i * 0.16, high[i % high.length] * 2, 0.9);
     }
-    stab(t0, BAR, chord, 0.8);
   }
 
-  if (drive) {
-    for (let b = 0; b < 4; b++) kick(t0 + b * BEAT, 1);
-    clap(t0 + BEAT, 1);
-    clap(t0 + BEAT * 3, 1);
-    for (let e = 0; e < 8; e++) {
-      hat(t0 + e * (BEAT / 2), e % 4 === 3, e % 2 === 0 ? 0.9 : 0.6);
+  if (bar === 1 || bar === 2) {
+    // Line-up boards: keep it moving, but underneath the names.
+    timpani(t0 + BEAT * 2, root / 2, 0.55);
+    brass(t0 + BEAT * 3, BEAT, [chord[2], chord[3]], 0.62);
+    for (let i = 0; i < 6; i++) {
+      pluck(t0 + BEAT * 0.5 + i * 0.28, high[i % high.length] * 2, 0.6);
     }
-    bass(t0, BEAT / 2, root / 2, 1.05);
-    for (let e = 1; e < 8; e += 2) bass(t0 + e * (BEAT / 2), BEAT / 2, root / 2, 1);
-
-    brass(t0, BAR * 0.98, chord.map((f) => f * 2), bar >= 7 ? 1 : 0.9);
-    stab(t0 + BEAT * 0.5, BEAT * 0.9, chord, 0.9);
-    stab(t0 + BEAT * 2.5, BEAT * 0.9, chord, 0.9);
   }
 
-  // Accents land on the frames where the video cuts (see src/timeline.ts):
-  // bar 2 = black line-up, bar 4 = white line-up, bar 6 = VS, bar 7 = outro.
-  if (bar === 0) impact(t0, 1);
-  if (bar === 1) riser(t0, BAR, 1);
-  if (bar === 2) impact(t0, 0.95);
-  if (bar === 4) impact(t0, 0.95);
-  if (bar === 5) riser(t0 + BEAT * 2, BEAT * 2, 0.8);
-  if (bar === 6) impact(t0, 1);
-  if (bar === 7) impact(t0, 0.9);
-  if (bar === 9) {
-    brass(t0, BAR * 1.5, chord.map((f) => f * 2), 1);
-    impact(t0, 0.85);
+  if (bar === 2) swell(t0 + BEAT * 2, BEAT * 2, 1); // into the showdown
+
+  if (bar === 3) {
+    // Head-to-head: the dramatic bar, timpani on every beat.
+    for (let b = 1; b < 4; b++) timpani(t0 + b * BEAT, root / 2, 0.8);
+    brass(t0, BAR * 0.9, high, 1);
+    swell(t0 + BEAT * 3, BEAT, 1);
+  }
+
+  if (bar === 4) {
+    // Resolution: everything holds through the fixture card and rings out.
+    brass(t0, BAR * 1.35, high, 1);
+    timpani(t0 + BEAT * 2, root / 2, 0.7);
+    strings(t0 + BAR, 1.5, chord, 0.8, 0.2);
+    choir(t0 + BAR, 1.5, high, 0.85);
+    for (let i = 0; i < 5; i++) {
+      pluck(t0 + BEAT * 2 + i * 0.2, high[i % high.length] * 2, 0.8);
+    }
   }
 }
 
 /* ------------------------------------------------------------- mix & write */
 
-// Soft-clip, normalize, then fade the very end out.
 let peak = 0;
 for (let i = 0; i < N; i++) {
-  left[i] = Math.tanh(left[i] * 0.85);
-  right[i] = Math.tanh(right[i] * 0.85);
+  left[i] = Math.tanh(left[i] * 0.9);
+  right[i] = Math.tanh(right[i] * 0.9);
   peak = Math.max(peak, Math.abs(left[i]), Math.abs(right[i]));
 }
-const norm = peak > 0 ? 0.92 / peak : 1;
-const fadeSamples = Math.floor(0.9 * SR);
+const norm = peak > 0 ? 0.93 / peak : 1;
+const fadeSamples = Math.floor(1.1 * SR);
 
 const bytes = Buffer.alloc(N * 4);
 for (let i = 0; i < N; i++) {

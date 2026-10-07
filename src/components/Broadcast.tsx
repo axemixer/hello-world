@@ -2,208 +2,218 @@ import React from 'react';
 import {interpolate} from 'remotion';
 import type {Team} from '../data';
 import {MATCH} from '../data';
-import {COLORS, FONTS} from '../theme';
+import {COLORS, FONTS, GLASS, silverText} from '../theme';
 
-const GLASS = 'linear-gradient(100deg, rgba(7,14,22,0.96) 0%, rgba(9,19,29,0.80) 62%, rgba(9,19,29,0.52) 100%)';
+/** The thin silver rule that tops and tails every panel. */
+export const Hairline: React.FC<{progress?: number; width?: number | string}> = ({
+  progress = 1,
+  width = '100%',
+}) => (
+  <div
+    style={{
+      width,
+      height: 2,
+      transform: `scaleX(${progress})`,
+      background: `linear-gradient(90deg, transparent, ${COLORS.silverDim} 18%, ${COLORS.silver} 50%, ${COLORS.silverDim} 82%, transparent)`,
+    }}
+  />
+);
 
 /**
- * The lower-third that broadcasts put above a tactical board: colour flash,
- * team badge block, name, and the formation on the right.
+ * The team strap above a line-up board: silver rules, a colour chip for the
+ * kit, the name in brushed silver and the shape on the right.
  */
-export const TeamHeader: React.FC<{team: Team; progress: number; letter: string}> = ({
+export const TeamStrap: React.FC<{team: Team; progress: number; letter: string}> = ({
   team,
   progress,
   letter,
 }) => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'stretch',
-      height: 156,
-      // Wipes open from the left like a broadcast strap.
-      clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
-      background: GLASS,
-      borderLeft: `16px solid ${team.accent}`,
-      boxShadow: '0 18px 46px rgba(0,0,0,0.55)',
-    }}
-  >
-    <div
-      style={{
-        width: 128,
-        display: 'grid',
-        placeItems: 'center',
-        background: team.shirt,
-        borderRight: `2px solid rgba(255,255,255,0.12)`,
-      }}
-    >
-      <span style={{fontFamily: FONTS.display, fontSize: 84, color: team.ink, lineHeight: 1}}>
-        {letter}
-      </span>
-    </div>
-
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '0 30px',
-        gap: 6,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: FONTS.body,
-          fontWeight: 600,
-          fontSize: 28,
-          letterSpacing: 11,
-          color: team.accent,
-          lineHeight: 1,
-        }}
-      >
-        {team.subtitle} · KADRO
-      </span>
-      <span
-        style={{
-          fontFamily: FONTS.display,
-          fontSize: 74,
-          color: '#fff',
-          letterSpacing: 1,
-          lineHeight: 1,
-        }}
-      >
-        {team.name}
-      </span>
-    </div>
-
+  <div style={{width: '100%'}}>
+    <Hairline progress={progress} />
     <div
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        justifyContent: 'center',
-        padding: '0 34px',
-        borderLeft: '2px solid rgba(255,255,255,0.12)',
-        gap: 6,
-      }}
-    >
-      <span
-        style={{
-          fontFamily: FONTS.body,
-          fontWeight: 600,
-          fontSize: 24,
-          letterSpacing: 8,
-          color: 'rgba(255,255,255,0.55)',
-          lineHeight: 1,
-        }}
-      >
-        DİZİLİŞ
-      </span>
-      <span
-        style={{
-          fontFamily: FONTS.display,
-          fontSize: 56,
-          color: COLORS.lime,
-          letterSpacing: 2,
-          lineHeight: 1,
-        }}
-      >
-        {team.formation}
-      </span>
-    </div>
-  </div>
-);
-
-/** The fixture strip along the bottom of every in-match graphic. */
-export const Ticker: React.FC<{progress: number}> = ({progress}) => {
-  const cells = [MATCH.day, MATCH.time, MATCH.venue, MATCH.format];
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: 96,
-        clipPath: `inset(0 0 0 ${(1 - progress) * 100}%)`,
+        alignItems: 'stretch',
+        height: 150,
+        clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
         background: GLASS,
-        borderRight: `16px solid ${COLORS.lime}`,
-        boxShadow: '0 -14px 40px rgba(0,0,0,0.5)',
       }}
     >
-      {cells.map((cell, i) => (
-        <div
-          key={cell}
+      <div
+        style={{
+          width: 120,
+          display: 'grid',
+          placeItems: 'center',
+          background: team.shirt,
+          borderRight: `2px solid ${COLORS.silverFaint}`,
+        }}
+      >
+        <span style={{fontFamily: FONTS.display, fontSize: 76, color: team.ink, lineHeight: 1}}>
+          {letter}
+        </span>
+      </div>
+
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '0 28px',
+          gap: 8,
+        }}
+      >
+        <span
           style={{
-            flex: 1,
-            textAlign: 'center',
             fontFamily: FONTS.body,
-            fontWeight: 700,
-            fontSize: 40,
-            letterSpacing: 5,
-            color: i === 1 ? COLORS.lime : 'rgba(255,255,255,0.92)',
-            borderLeft: i === 0 ? 'none' : '2px solid rgba(255,255,255,0.14)',
+            fontWeight: 600,
+            fontSize: 26,
+            letterSpacing: 12,
+            color: COLORS.blue,
             lineHeight: 1,
           }}
         >
-          {cell}
-        </div>
-      ))}
+          {team.subtitle} · KADRO
+        </span>
+        <span
+          style={{
+            ...silverText,
+            fontFamily: FONTS.display,
+            fontSize: 70,
+            letterSpacing: 2,
+            lineHeight: 1.24, // room for the dot on İ and the tail on Ş
+          }}
+        >
+          {team.name}
+        </span>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          padding: '0 30px',
+          borderLeft: `2px solid ${COLORS.silverFaint}`,
+          gap: 8,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: FONTS.body,
+            fontWeight: 600,
+            fontSize: 22,
+            letterSpacing: 9,
+            color: COLORS.silverDim,
+            lineHeight: 1.3,
+          }}
+        >
+          DİZİLİŞ
+        </span>
+        <span
+          style={{
+            ...silverText,
+            fontFamily: FONTS.display,
+            fontSize: 54,
+            letterSpacing: 2,
+            lineHeight: 1,
+          }}
+        >
+          {team.formation}
+        </span>
+      </div>
+    </div>
+    <Hairline progress={progress} />
+  </div>
+);
+
+/** Centred fixture strip along the bottom of every graphic. */
+export const Ticker: React.FC<{progress: number}> = ({progress}) => {
+  const cells = [MATCH.day, MATCH.time, MATCH.venue, MATCH.format];
+  return (
+    <div style={{width: '100%'}}>
+      <Hairline progress={progress} />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: 92,
+          opacity: progress,
+          background: GLASS,
+        }}
+      >
+        {cells.map((cell, i) => (
+          <div
+            key={cell}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              fontFamily: FONTS.body,
+              fontWeight: 700,
+              fontSize: 34,
+              letterSpacing: 4,
+              color: i === 1 ? COLORS.blue : COLORS.silver,
+              borderLeft: i === 0 ? 'none' : `2px solid ${COLORS.silverFaint}`,
+              lineHeight: 1.3,
+            }}
+          >
+            {cell}
+          </div>
+        ))}
+      </div>
+      <Hairline progress={progress} />
     </div>
   );
 };
 
-/** Small top-corner tag, the way a channel marks a pre-match graphic. */
-export const LiveTag: React.FC<{progress: number; label?: string}> = ({
-  progress,
-  label = 'MAÇ ÖNÜ',
-}) => (
+/** Small competition tag that sits above every graphic. */
+export const CompetitionTag: React.FC<{progress: number}> = ({progress}) => (
   <div
     style={{
-      display: 'inline-flex',
+      display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
-      gap: 14,
-      padding: '12px 24px',
-      borderRadius: 6,
-      background: 'rgba(7,14,22,0.88)',
-      border: '2px solid rgba(255,255,255,0.16)',
+      gap: 10,
       opacity: progress,
-      transform: `translateY(${(1 - progress) * -24}px)`,
+      transform: `translateY(${(1 - progress) * -18}px)`,
     }}
   >
     <span
       style={{
-        width: 16,
-        height: 16,
-        borderRadius: '50%',
-        background: COLORS.orange,
-        boxShadow: `0 0 18px ${COLORS.orange}`,
-      }}
-    />
-    <span
-      style={{
         fontFamily: FONTS.body,
         fontWeight: 700,
-        fontSize: 28,
-        letterSpacing: 8,
-        color: 'rgba(255,255,255,0.88)',
-        lineHeight: 1,
+        fontSize: 30,
+        letterSpacing: 16,
+        color: COLORS.silverDim,
+        lineHeight: 1.3,
       }}
     >
-      {label}
+      {MATCH.competition}
     </span>
+    <Hairline progress={progress} width={420} />
   </div>
 );
 
-/** Thin animated accent rule used to separate broadcast blocks. */
-export const AccentRule: React.FC<{progress: number; colors: string[]; width: number}> = ({
-  progress,
-  colors,
-  width,
-}) => (
+/** Shared helper for the metal-sheen headline used in the big scenes. */
+export const Headline: React.FC<{
+  children: React.ReactNode;
+  size: number;
+  progress: number;
+}> = ({children, size, progress}) => (
   <div
     style={{
-      width: interpolate(progress, [0, 1], [0, width]),
-      height: 6,
-      background: `linear-gradient(90deg, ${colors.join(', ')})`,
+      ...silverText,
+      fontFamily: FONTS.display,
+      fontSize: size,
+      letterSpacing: 4,
+      lineHeight: 1.32,
+      textAlign: 'center',
+      opacity: progress,
+      transform: `scale(${interpolate(progress, [0, 1], [1.18, 1])})`,
+      filter: `drop-shadow(0 10px 32px rgba(0,0,0,0.75))`,
     }}
-  />
+  >
+    {children}
+  </div>
 );

@@ -1,7 +1,7 @@
 # Halı Saha Maç Videosu
 
-Remotion ile hazırlanmış, TV yayını tarzında halı saha maçı duyuru videosu.
-**15 saniye · 1080×1920 (dikey) · 30 fps · müzikli** — WhatsApp / Instagram Story için.
+Remotion ile hazırlanmış, Avrupa kupası gecesi formatında maç duyuru videosu.
+**15 saniye · 1080×1920 (dikey) · 30 fps · orkestral marş** — WhatsApp / Instagram Story için.
 
 ## Maç
 
@@ -20,19 +20,18 @@ da **2-2-2** diziliyor: 2 defans, 2 orta saha, 2 forvet.
 
 ## Sahneler
 
-Müzik 160 BPM olduğu için bir ölçü tam olarak 1.5 sn = 45 kare. Bütün kesmeler
-ölçü başlarına, müziğin vuruşlarına denk geliyor (`src/timeline.ts`).
+Marş 80 BPM olduğu için bir ölçü tam olarak 3 sn = 90 kare ve her ölçü bir
+timpani + zil vuruşuyla açılıyor. Her sahne bir ölçü, yani her geçiş bir
+vuruşa denk geliyor (`src/timeline.ts`). Sahneler kesmeyle değil, sabit duran
+yıldız alanının üzerinde erimeyle (dissolve) birbirine bağlanıyor.
 
 | Kare | Süre | Sahne |
 |---|---|---|
-| 0 | 3 sn | Açılış jeneriği — **MAÇ GÜNÜ / KADROLAR AÇIKLANDI** |
+| 0 | 3 sn | Arma kuruluyor — **HALI SAHA LİGİ** |
 | 90 | 3 sn | Siyah takım taktik tahtası |
 | 180 | 3 sn | Beyaz takım taktik tahtası |
-| 270 | 1.5 sn | **SİYAH vs BEYAZ** |
-| 315 | 4.5 sn | **HAZIR MISIN?** + özet kart |
-
-Her sahnede yayın grafikleri sabit: sağ üstte **MAÇ ÖNÜ** etiketi, takım
-şeridi (alt bant), altta **PERŞEMBE · 20:00 · BALTALİMANI · 6 v 6** şeridi.
+| 270 | 3 sn | **A vs B** karşılaşma kartı |
+| 360 | 3 sn | **MAÇ GÜNÜ** — gün / saat / saha |
 
 ## Komutlar
 
@@ -61,10 +60,11 @@ mevkileri değiştirir.
 
 ## Müzik
 
-`public/music.mp3` sıfırdan sentezleniyor — hazır örnek (sample) kullanılmıyor,
-dolayısıyla telif sorunu yok. `scripts/make-music.mjs` davul, bas, akor ve riser
-seslerini tek tek üretip 160 BPM / La minör bir parçaya diziyor: açılış vuruşu →
-hızlanan build-up → sonuna kadar yüksek tempo. `npm run music` ile yeniden üretilir.
+`public/music.mp3` sıfırdan sentezleniyor — hazır örnek (sample) ya da mevcut
+bir melodi kullanılmıyor, dolayısıyla telif sorunu yok.
+`scripts/make-music.mjs` timpani, yaylı grubu, koro pedi, bakır üflemeli
+fanfar, arp ve zil seslerini tek tek üretip 80 BPM / Re majör bir marşa
+diziyor. `npm run music` ile yeniden üretilir.
 
 ## Yazı tipleri
 
@@ -77,17 +77,18 @@ dahil. Ayrıntı: `public/fonts/OFL.txt`.
 ```
 src/
   Root.tsx                 kompozisyon tanımı
-  MatchVideo.tsx           sahneleri ve müziği birleştirir
+  MatchVideo.tsx           sahneleri, marşı ve geçişleri birleştirir
   timeline.ts              kare/ölçü hesapları
   data.ts                  maç bilgisi, kadrolar ve diziliş koordinatları
-  theme.ts                 renkler ve font yığınları
+  theme.ts                 gece laciverti paleti ve gümüş tipografi
   fonts.ts                 yerel font yükleme
   components/
+    Starfield.tsx          yıldızlı gece arka planı (tüm sahnelerin altında)
+    Crest.tsx              lige özel gümüş arma
     FormationBoard.tsx     perspektifli taktik tahtası
-    Broadcast.tsx          alt bant, şerit, MAÇ ÖNÜ etiketi
-    Pitch.tsx              arka plan sahası
+    Broadcast.tsx          bantlar, şerit, gümüş başlık
     Ball.tsx, Jersey.tsx   top ve forma çizimleri
-    anim.ts                animasyon yardımcıları
-  scenes/                  Intro, Lineup, Clash, Outro
-scripts/make-music.mjs     müzik sentezleyici
+    anim.ts                animasyon ve dissolve yardımcıları
+  scenes/                  Opening, Lineup, Showdown, Fixture
+scripts/make-music.mjs     marş sentezleyici
 ```

@@ -2,59 +2,52 @@ import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import type {Team} from '../data';
 import {FormationBoard} from '../components/FormationBoard';
-import {LiveTag, TeamHeader, Ticker} from '../components/Broadcast';
-import {EASE_OUT, impactFlash, punchIn, reveal} from '../components/anim';
+import {CompetitionTag, TeamStrap, Ticker} from '../components/Broadcast';
+import {EASE_OUT, punchIn, reveal} from '../components/anim';
 
 /**
- * Bars 2-3 and 4-5: one team per scene, as a broadcast tactical board.
- * Markers land two per beat so the squad fills in with the music.
+ * Bars 1 and 2: one team per bar, as a broadcast tactical board. The six
+ * markers land across the first half of the bar, on the harp figure.
  */
 export const Lineup: React.FC<{team: Team; letter: string}> = ({team, letter}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
 
-  const board = interpolate(frame, [0, 14], [0, 1], {
+  const board = interpolate(frame, [0, 18], [0, 1], {
     extrapolateRight: 'clamp',
     easing: EASE_OUT,
   });
-  const header = reveal(frame, 2, 12);
-  const ticker = reveal(frame, 8, 12);
 
   return (
     <AbsoluteFill>
-      {/* Team colour wash so the black and white boards read differently. */}
+      {/* A breath of the kit colour from the top corner keeps the two boards
+          distinguishable without lighting up the whole navy frame. */}
       <AbsoluteFill
         style={{
-          background: `linear-gradient(170deg, ${team.shirt}d9 0%, rgba(6,17,25,0.86) 52%, ${team.shirt}73 100%)`,
+          background: `radial-gradient(58% 32% at 50% 0%, ${team.shirt}6e 0%, transparent 70%)`,
           opacity: board,
         }}
       />
 
       <AbsoluteFill
-        style={{
-          padding: '74px 44px 64px',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
+        style={{padding: '58px 42px 54px', display: 'flex', flexDirection: 'column'}}
       >
-        <div style={{display: 'flex', justifyContent: 'flex-end', marginBottom: 22}}>
-          <LiveTag progress={punchIn(frame, fps, 6)} />
+        <div style={{display: 'flex', justifyContent: 'center', marginBottom: 24}}>
+          <CompetitionTag progress={reveal(frame, 0, 12)} />
         </div>
 
-        <TeamHeader team={team} progress={header} letter={letter} />
+        <TeamStrap team={team} progress={reveal(frame, 3, 13)} letter={letter} />
 
         <div style={{flex: 1, display: 'grid', placeItems: 'center'}}>
           <FormationBoard
             team={team}
             boardProgress={board}
-            progressFor={(i) => punchIn(frame, fps, 12 + i * 4)}
+            progressFor={(i) => punchIn(frame, fps, 14 + i * 5)}
           />
         </div>
 
-        <Ticker progress={ticker} />
+        <Ticker progress={reveal(frame, 10, 14)} />
       </AbsoluteFill>
-
-      <AbsoluteFill style={{background: '#fff', opacity: impactFlash(frame, 7)}} />
     </AbsoluteFill>
   );
 };

@@ -26,6 +26,8 @@ export type Team = {
 };
 
 export const MATCH = {
+  competition: 'HALI SAHA LİGİ',
+  stage: 'HAFTANIN MAÇI',
   day: 'PERŞEMBE',
   time: '20:00',
   venue: 'BALTALİMANI',
