@@ -63,7 +63,7 @@ export const TEAM_A: Team = {
   shirtShade: '#0a0b0e',
   ink: '#ffffff',
   accent: '#ff4d2d',
-  players: lineUp(['MERT', 'OĞUZ', 'MURAT', 'PASSUCCI', 'KAMİL', 'YUSUF']),
+  players: lineUp(['MERT E.', 'OĞUZ', 'MERT H.', 'MURAT', 'BULUT', 'YUSUF']),
 };
 
 export const TEAM_B: Team = {
@@ -74,5 +74,5 @@ export const TEAM_B: Team = {
   shirtShade: '#cfd3da',
   ink: '#15161a',
   accent: '#2dd4ff',
-  players: lineUp(['ORKUN', 'AYKUT', 'ÖZKAN', 'MUSTAFA', 'ERSAN', 'TUNAHAN']),
+  players: lineUp(['ORKUN', 'GÖKTUĞ', 'AYKUT', 'ERSAN +1', 'KAMİL', 'ERSAN']),
 };

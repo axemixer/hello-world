@@ -15,8 +15,8 @@ Remotion ile hazırlanmış, TV yayını tarzında halı saha maçı duyuru vide
 Kaleci oynanmıyor — kale önü taktik tahtasında boş bırakılıyor. Her iki takım
 da **2-2-2** diziliyor: 2 defans, 2 orta saha, 2 forvet.
 
-**Siyah Takım (A):** Mert (DEF), Oğuz (DEF), Murat (ORT), Passucci (ORT), Kamil (FOR), Yusuf (FOR)
-**Beyaz Takım (B):** Orkun (DEF), Aykut (DEF), Özkan (ORT), Mustafa (ORT), Ersan (FOR), Tunahan (FOR)
+**Siyah Takım (A):** Mert E. (DEF), Oğuz (DEF), Mert H. (ORT), Murat (ORT), Bulut (FOR), Yusuf (FOR)
+**Beyaz Takım (B):** Orkun (DEF), Göktuğ (DEF), Aykut (ORT), Ersan +1 (ORT), Kamil (FOR), Ersan (FOR)
 
 ## Sahneler
 
